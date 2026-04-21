@@ -1,0 +1,10 @@
+# Ignore everything outside this folder
+../../../../*
+../../../*
+../../*
+../*
+
+# Keep only portfolio files
+!juhaina-portfolio.html
+!Image.jpg
+!Juhaina_AlBadi_Resume_LinkedIn.pdf
