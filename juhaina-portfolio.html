@@ -917,31 +917,39 @@
   }
   startBlink();
 
-  // Upload
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    fileNameEl.textContent = '✅ ' + file.name;
+  // Auto-load voice.mp3 from the repo if it exists
+  function setupAudio(src, name) {
     if (audio) { audio.pause(); audio.src = ''; }
-    audio = new Audio(URL.createObjectURL(file));
+    audio = new Audio(src);
     useRealAudio = true;
-    audio.addEventListener('loadedmetadata', () => {
-      timeDuration.textContent = fmtTime(audio.duration);
-    });
+    fileNameEl.textContent = '✅ ' + name;
+    audio.addEventListener('loadedmetadata', () => { timeDuration.textContent = fmtTime(audio.duration); });
     audio.addEventListener('timeupdate', () => {
-      const pct = (audio.currentTime / audio.duration) * 100;
-      progressFill.style.width = pct + '%';
+      progressFill.style.width = (audio.currentTime / audio.duration * 100) + '%';
       timeElapsed.textContent = fmtTime(audio.currentTime);
     });
     audio.addEventListener('ended', stopAll);
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const src = ctx.createMediaElementSource(audio);
+      const src2 = ctx.createMediaElementSource(audio);
       analyser = ctx.createAnalyser();
       analyser.fftSize = 256;
       dataArray = new Uint8Array(analyser.frequencyBinCount);
-      src.connect(analyser); analyser.connect(ctx.destination);
+      src2.connect(analyser); analyser.connect(ctx.destination);
     } catch(e) { analyser = null; }
+  }
+
+  // Load voice.mp3 automatically (permanent for all visitors)
+  fetch('voice.mp3', { method: 'HEAD' })
+    .then(r => { if (r.ok) setupAudio('voice.mp3', 'voice.mp3'); })
+    .catch(() => {});
+
+  // Upload (admin only — replaces voice.mp3 preview locally)
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setupAudio(URL.createObjectURL(file), file.name);
+    fileNameEl.textContent = '✅ ' + file.name;
   });
 
   function startAll() {
