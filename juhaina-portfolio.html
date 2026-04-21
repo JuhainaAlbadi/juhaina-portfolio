@@ -940,9 +940,7 @@
   }
 
   // Load voice.mp3 automatically (permanent for all visitors)
-  fetch('voice.mp3', { method: 'HEAD' })
-    .then(r => { if (r.ok) setupAudio('voice.mp3', 'voice.mp3'); })
-    .catch(() => {});
+  setupAudio('voice.mp3', 'voice.mp3');
 
   // Upload (admin only — replaces voice.mp3 preview locally)
   fileInput.addEventListener('change', e => {
