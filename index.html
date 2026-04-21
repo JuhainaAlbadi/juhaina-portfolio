@@ -552,21 +552,6 @@
       <!-- Photo -->
       <img src="Image.jpg" style="position:relative;z-index:2;width:240px;height:295px;object-fit:cover;object-position:top;border-radius:50% 50% 40% 40%;filter:drop-shadow(0 16px 36px rgba(255,107,157,0.25));" alt="Juhaina"/>
 
-      <!-- Lip sync SVG overlay -->
-      <svg id="lipSvg" viewBox="0 0 80 30" style="position:absolute;z-index:3;bottom:82px;left:50%;transform:translateX(-50%);width:72px;height:26px;pointer-events:none;">
-        <path id="mouthClosed" d="M8 12 Q40 20 72 12" stroke="#C0706A" stroke-width="3" fill="rgba(200,110,100,0.3)" stroke-linecap="round"/>
-        <g id="mouthOpen" opacity="0">
-          <ellipse cx="40" cy="17" rx="28" ry="11" fill="#A03030"/>
-          <ellipse cx="40" cy="10" rx="28" ry="5" fill="#C07070"/>
-          <rect x="15" y="5" width="50" height="8" rx="4" fill="white" opacity="0.88"/>
-          <path d="M12 12 Q40 4 68 12" stroke="#C07070" stroke-width="2.5" fill="rgba(200,110,100,0.45)" stroke-linecap="round"/>
-        </g>
-        <g id="mouthMid" opacity="0">
-          <ellipse cx="40" cy="15" rx="25" ry="6" fill="#A03030"/>
-          <rect x="18" y="6" width="44" height="6" rx="3" fill="white" opacity="0.85"/>
-          <path d="M15 12 Q40 5 65 12" stroke="#C07070" stroke-width="2.5" fill="rgba(200,110,100,0.35)" stroke-linecap="round"/>
-        </g>
-      </svg>
     </div>
 
     <!-- Waveform -->
@@ -871,9 +856,7 @@
   const waveform   = document.getElementById('waveform');
   const glowRing   = document.getElementById('glowRing');
   const bubble     = document.getElementById('bubble');
-  const mouthClosed= document.getElementById('mouthClosed');
-  const mouthOpen  = document.getElementById('mouthOpen');
-  const mouthMid   = document.getElementById('mouthMid');
+
   const progressFill= document.getElementById('progressFill');
   const timeElapsed = document.getElementById('timeElapsed');
   const timeDuration= document.getElementById('timeDuration');
@@ -881,25 +864,13 @@
   const fileNameEl = document.getElementById('fileName');
 
   let audio = null, isPlaying = false, useRealAudio = false;
-  let wordTimer = null, lipTimer = null, blinkTimer = null;
+  let wordTimer = null, blinkTimer = null;
   let analyser = null, dataArray = null;
 
   function fmtTime(s) {
     const m = Math.floor(s/60), sec = Math.floor(s%60);
     return m + ':' + (sec < 10 ? '0' : '') + sec;
   }
-  function setMouth(state) {
-    mouthClosed.style.opacity = state === 'closed' ? '1' : '0';
-    mouthMid.style.opacity    = state === 'mid'    ? '1' : '0';
-    mouthOpen.style.opacity   = state === 'open'   ? '1' : '0';
-  }
-  function randomLip() {
-    const r = Math.random();
-    if (r < 0.35) setMouth('open');
-    else if (r < 0.6) setMouth('mid');
-    else setMouth('closed');
-  }
-
   // Blink
   function startBlink() {
     const img = document.querySelector('.voice-section img');
@@ -983,19 +954,6 @@
       initAnalyser();
       audio.currentTime = 0;
       audio.play();
-      if (analyser) {
-        (function realLip() {
-          if (!isPlaying) return;
-          analyser.getByteFrequencyData(dataArray);
-          const vol = dataArray.slice(0,10).reduce((a,b)=>a+b,0)/10;
-          if (vol > 60) setMouth('open');
-          else if (vol > 25) setMouth('mid');
-          else setMouth('closed');
-          requestAnimationFrame(realLip);
-        })();
-      } else { lipTimer = setInterval(randomLip, 150); }
-    } else {
-      lipTimer = setInterval(randomLip, 150);
     }
   }
 
@@ -1008,9 +966,7 @@
     glowRing.style.animation = 'ringPulse 3s ease-in-out infinite';
     bubble.style.opacity = '0';
     bubble.style.transform = 'scale(0.8) translateY(8px)';
-    setMouth('closed');
     clearInterval(wordTimer);
-    clearInterval(lipTimer);
     if (audio && !audio.ended) audio.pause();
   }
 
