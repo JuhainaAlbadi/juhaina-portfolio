@@ -917,10 +917,11 @@
   }
   startBlink();
 
-  // Auto-load voice.mp3 from the repo if it exists
+  // Load audio — AudioContext created only on first play (browser policy)
   function setupAudio(src, name) {
     if (audio) { audio.pause(); audio.src = ''; }
     audio = new Audio(src);
+    audio.preload = 'auto';
     useRealAudio = true;
     fileNameEl.textContent = '✅ ' + name;
     audio.addEventListener('loadedmetadata', () => { timeDuration.textContent = fmtTime(audio.duration); });
@@ -929,6 +930,10 @@
       timeElapsed.textContent = fmtTime(audio.currentTime);
     });
     audio.addEventListener('ended', stopAll);
+  }
+
+  function initAnalyser() {
+    if (analyser || !audio) return;
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const src2 = ctx.createMediaElementSource(audio);
@@ -939,15 +944,15 @@
     } catch(e) { analyser = null; }
   }
 
-  // Load voice.mp3 automatically (permanent for all visitors)
+  // Load voice.mp3 automatically for all visitors
   setupAudio('voice.mp3', 'voice.mp3');
 
-  // Upload (admin only — replaces voice.mp3 preview locally)
+  // Upload (admin only)
   fileInput.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
+    analyser = null;
     setupAudio(URL.createObjectURL(file), file.name);
-    fileNameEl.textContent = '✅ ' + file.name;
   });
 
   function startAll() {
@@ -975,6 +980,7 @@
     }, msPerWord);
 
     if (useRealAudio && audio) {
+      initAnalyser();
       audio.currentTime = 0;
       audio.play();
       if (analyser) {
